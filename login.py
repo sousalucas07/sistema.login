@@ -1,37 +1,32 @@
 
-import bcrypt
+from flask import Flask, request, jsonify, send_from_directory, render_template
 import mysql.connector
+import bcrypt
 import jwt
 from datetime import datetime, timedelta
-import requests
 
-from flask import Flask, request, jsonify
-
-# Crie uma instância do Flask
 app = Flask(__name__)
 
-# Defina uma rota e uma função de visualização
 @app.route('/')
-def hello():
-    return 'Hello, World!'
+def index():
+    return render_template('index.html')
 
-# Execute o aplicativo Flask
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/static/<path:path>')
+def send_static(path):
+    return send_from_directory('static', path)
 
 conn = {
     'host': 'localhost',
-    'user': 'root',  # Correção aqui
+    'user': 'root',
     'password': '2706Lps@',
     'database': 'LOGIN'
 }
-
 
 # Função para conectar ao banco de dados
 def conectar_banco():
     try:
         # Conectar ao banco de dados
-        conexao = mysql.connector.connect( 
+        conexao = mysql.connector.connect(
             host=conn['host'],
             user=conn['user'],
             password=conn['password'],
@@ -42,10 +37,8 @@ def conectar_banco():
         print(f"Erro ao conectar ao banco de dados: {erro}")
         return None
 
-con = conectar_banco()
-
 # Função para registrar novos usuários no banco de dados
-@app.route('/registro', methods=['POST'])
+@app.route('/registrar', methods=['POST'])
 def registro_usuario():
     data = request.get_json()
     nome = data['nome']
@@ -96,26 +89,6 @@ def login_usuario():
         except mysql.connector.Error as erro:
             return jsonify({'error': f"Erro ao autenticar usuário: {erro}"}), 500
 
-# Interface para cadastro de novos usuários
-def cadastro_usuario_interface():
-    print("Bem-vindo ao sistema de cadastro!")
-    nome = input("Digite seu nome de usuário: ")
-    senha = input("Digite sua senha: ")
-    confirm_password = input("Confirme sua senha: ")
-
-    if senha == confirm_password:
-        # Envia os dados para a rota /registro usando a biblioteca requests
-        data = {'nome': nome, 'senha': senha, 'confirm_password': confirm_password}
-        response = requests.post('http://localhost:5000/registro', json=data)
-        
-        # Verifica o código de status da resposta
-        if response.status_code == 201:
-            print("Usuário registrado com sucesso!")
-        else:
-            print("Erro ao registrar usuário:", response.json()['error'])
-    else:
-        print("As senhas não coincidem.")
-
-# Exemplo de uso
 if __name__ == "__main__":
-    cadastro_usuario_interface()
+    app.run(host='127.0.0.1', port=5000, debug=True)
+
