@@ -1,19 +1,12 @@
 
-from flask import Flask, request, jsonify, send_from_directory, render_template
+from flask import Blueprint, request, jsonify
 import mysql.connector
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
 
-app = Flask(__name__)
+registro_usuario_blueprint = Blueprint('registro_usuario', __name__)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/static/<path:path>')
-def send_static(path):
-    return send_from_directory('static', path)
 
 conn = {
     'host': 'localhost',
@@ -38,8 +31,9 @@ def conectar_banco():
         return None
 
 # Função para registrar novos usuários no banco de dados
-@app.route('/registrar', methods=['POST'])
+@registro_usuario_blueprint.route('/registrar', methods=['POST'])
 def registro_usuario():
+    print("Endpoint de registro foi chamado!")
     data = request.get_json()
     nome = data['nome']
     senha = data['senha']
@@ -61,7 +55,7 @@ def registro_usuario():
         return jsonify({'error': 'As senhas não coincidem.'}), 400
 
 # Função para autenticar usuários e gerar token JWT
-@app.route('/login', methods=['POST'])
+@registro_usuario_blueprint.route('/login', methods=['POST'])
 def login_usuario():
     data = request.get_json()
     nome = data['nome']
@@ -88,7 +82,4 @@ def login_usuario():
                 return jsonify({'error': 'Usuário não encontrado.'}), 404
         except mysql.connector.Error as erro:
             return jsonify({'error': f"Erro ao autenticar usuário: {erro}"}), 500
-
-if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000, debug=True)
 
